@@ -1,783 +1,378 @@
-<!-- ========================= -->
-<!-- index.html -->
-<!-- USER PAGE FULL -->
-<!-- ========================= -->
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Arrow Ticket</title>
-
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-<link
-rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-/>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arrow Ticket</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        /* Tùy chỉnh màu chủ đạo giống ảnh */
+        .bg-ticketbox { background-color: #00b14f; }
+        .text-ticketbox { color: #00b14f; }
+        .border-ticketbox { border-color: #00b14f; }
+        body { background-color: #111111; color: white; }
+    </style>
 </head>
 
 <body>
-
 <div id="app">
 
-<!-- NAVBAR -->
-<nav
-:class="darkMode ? 'bg-slate-950' : 'bg-indigo-900'"
-class="text-white shadow-xl"
->
-
-<div class="container mx-auto px-4 py-4 flex justify-between items-center">
-
-<h1 class="text-3xl font-black">
-Arrow Ticket
-</h1>
-
-<div class="flex items-center gap-4">
-
-<button
-@click="darkMode=!darkMode"
-class="w-10 h-10 rounded-full bg-white/10"
->
-<i :class="darkMode ? 'fas fa-sun' : 'fas fa-moon'"></i>
-</button>
-
-<div v-if="currentUser">
-
-<p class="font-black">
-{{ currentUser.name }}
-</p>
-
-<p class="text-xs text-indigo-200">
-{{ currentUser.role }}
-</p>
-
-</div>
-
-</div>
-
-</div>
-
-</nav>
-
-<!-- MAIN -->
-<div
-:class="darkMode
-? 'bg-slate-950 text-white'
-: 'bg-slate-100 text-slate-800'"
-
-class="min-h-screen"
->
-
-<div class="container mx-auto px-4 py-10">
-
-<!-- LOGIN -->
-<div
-v-if="page==='login'"
-class="max-w-md mx-auto"
->
-
-<div
-:class="darkMode ? 'bg-slate-900' : 'bg-white'"
-class="rounded-3xl p-8 shadow-2xl"
->
-
-<h2 class="text-4xl font-black text-center mb-6">
-Đăng nhập
-</h2>
-
-<div class="space-y-4">
-
-<input
-v-model="loginForm.email"
-type="email"
-placeholder="Email"
-class="w-full px-4 py-4 rounded-2xl border text-black"
-/>
-
-<input
-v-model="loginForm.password"
-type="password"
-placeholder="Mật khẩu"
-class="w-full px-4 py-4 rounded-2xl border text-black"
-/>
-
-<button
-@click="processLogin"
-class="w-full py-4 rounded-2xl bg-indigo-600 text-white font-black"
->
-Đăng nhập
-</button>
-
-<div class="text-center">
-
-<button
-@click="page='register'"
-class="text-indigo-500 font-black"
->
-Tạo tài khoản
-</button>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-<!-- REGISTER -->
-<div
-v-else-if="page==='register'"
-class="max-w-md mx-auto"
->
-
-<div
-:class="darkMode ? 'bg-slate-900' : 'bg-white'"
-class="rounded-3xl p-8 shadow-2xl"
->
-
-<h2 class="text-4xl font-black text-center mb-6">
-Đăng ký
-</h2>
-
-<div class="space-y-4">
-
-<input
-v-model="registerForm.name"
-placeholder="Họ tên"
-class="w-full px-4 py-4 rounded-2xl border text-black"
-/>
-
-<input
-v-model="registerForm.email"
-placeholder="Email"
-class="w-full px-4 py-4 rounded-2xl border text-black"
-/>
-
-<input
-v-model="registerForm.password"
-type="password"
-placeholder="Mật khẩu"
-class="w-full px-4 py-4 rounded-2xl border text-black"
-/>
-
-<button
-@click="registerAccount"
-class="w-full py-4 rounded-2xl bg-green-600 text-white font-black"
->
-Đăng ký
-</button>
-
-<div class="text-center">
-
-<button
-@click="page='login'"
-class="text-indigo-500 font-black"
->
-Quay lại
-</button>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-<!-- HOME -->
-<div v-else>
-
-<div class="flex justify-between items-center mb-10">
-
-<h2 class="text-5xl font-black">
-Sự kiện nổi bật
-</h2>
-
-<button
-@click="logout"
-class="px-5 py-3 rounded-2xl bg-red-500 text-white font-black"
->
-Đăng xuất
-</button>
-
-</div>
-
-<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-
-<div
-v-for="event in events"
-:key="event.id"
-
-:class="darkMode
-? 'bg-slate-900 border border-slate-800'
-: 'bg-white'"
-
-class="rounded-3xl overflow-hidden shadow-2xl"
->
-
-<img
-:src="event.image"
-class="w-full h-60 object-cover"
-/>
-
-<div class="p-6">
-
-<h3 class="text-3xl font-black mb-3">
-{{ event.name }}
-</h3>
-
-<p class="text-slate-500 mb-4">
-{{ event.description }}
-</p>
-
-<div class="text-pink-500 font-black mb-4">
-{{ event.countdown }}
-</div>
-
-<div class="grid grid-cols-5 gap-2 mb-5">
-
-<button
-v-for="seat in seats"
-
-@click="selectSeat(event.id,seat)"
-
-:class="selectedSeats[event.id]===seat
-? 'bg-green-500 text-white'
-: 'bg-slate-200 text-black'"
-
-class="h-10 rounded-xl font-black"
->
-
-{{ seat }}
-
-</button>
-
-</div>
-
-<select
-v-model="selectedTicket[event.id]"
-class="w-full px-4 py-4 rounded-2xl border text-black mb-4"
->
-
-<option disabled value="">
-Chọn loại vé
-</option>
-
-<option
-v-for="ticket in event.ticketTypes"
-:value="ticket"
->
-{{ ticket.name }} -
-{{ formatPrice(ticket.price) }}
-</option>
-
-</select>
-
-<button
-@click="buyTicket(event)"
-class="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black"
->
-Thanh toán
-</button>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-<!-- PAYMENT -->
-<div
-v-if="showPayment"
-class="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
->
-
-<div class="bg-white rounded-3xl p-8 max-w-md w-full">
-
-<h2 class="text-3xl font-black text-center mb-6">
-Thanh toán
-</h2>
-
-<div class="grid grid-cols-2 gap-4 mb-6">
-
-<button
-@click="paymentMethod='MoMo'"
-
-:class="paymentMethod==='MoMo'
-? 'bg-pink-500 text-white'
-: 'bg-slate-100'"
-
-class="py-4 rounded-2xl font-black"
->
-MoMo
-</button>
-
-<button
-@click="paymentMethod='VNPay'"
-
-:class="paymentMethod==='VNPay'
-? 'bg-blue-500 text-white'
-: 'bg-slate-100'"
-
-class="py-4 rounded-2xl font-black"
->
-VNPay
-</button>
-
-</div>
-
-<div
-id="paymentQR"
-class="flex justify-center mb-6"
->
-</div>
-
-<button
-@click="confirmPayment"
-class="w-full py-4 rounded-2xl bg-green-600 text-white font-black"
->
-Xác nhận thanh toán
-</button>
-
-</div>
-
-</div>
-
-<!-- LOADING -->
-<div
-v-if="paymentLoading"
-class="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
->
-
-<div class="text-center text-white">
-
-<div
-class="w-24 h-24 border-8 border-white border-t-transparent rounded-full animate-spin mx-auto mb-6"
->
-</div>
-
-<h2 class="text-3xl font-black">
-Đang xử lý thanh toán...
-</h2>
-
-</div>
-
-</div>
-
+    <nav class="bg-ticketbox text-white py-3">
+        <div class="container mx-auto px-4 flex flex-wrap justify-between items-center gap-4">
+            <h1 class="text-3xl font-black cursor-pointer" @click="page='home'">
+                Arrow Ticket
+            </h1>
+
+            <div class="flex-1 max-w-xl hidden md:flex items-center bg-white rounded-full px-4 py-2">
+                <i class="fas fa-search text-gray-500"></i>
+                <input type="text" placeholder="Bạn tìm gì hôm nay?" class="w-full bg-transparent border-none outline-none text-black ml-3 text-sm" />
+                <button class="bg-ticketbox text-white px-4 py-1 rounded-full text-sm font-bold">Tìm kiếm</button>
+            </div>
+
+            <div class="flex items-center gap-6 text-sm font-medium">
+                <button class="hidden md:block border border-white rounded-full px-4 py-2 hover:bg-white hover:text-[#00b14f] transition">
+                    Tạo sự kiện
+                </button>
+                <button class="hidden md:flex items-center gap-2">
+                    <i class="fas fa-ticket-alt"></i> Vé của tôi
+                </button>
+                
+                <div v-if="!currentUser" class="cursor-pointer" @click="page='login'">
+                    Đăng nhập | Đăng ký
+                </div>
+
+                <div v-else class="flex items-center gap-4">
+                    <div class="text-right">
+                        <p class="font-bold">{{ currentUser.name }}</p>
+                        <p class="text-xs text-green-200">{{ currentUser.role }}</p>
+                    </div>
+                    <button @click="logout" class="text-red-200 hover:text-white" title="Đăng xuất">
+                        <i class="fas fa-sign-out-alt text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="bg-[#1a1a1a] border-b border-gray-800 hidden md:block">
+        <div class="container mx-auto px-4 flex justify-center gap-8 text-sm text-gray-300 py-3 font-semibold">
+            <a href="nhacsong.html" class="hover:text-ticketbox transition">Nhạc sống</a>
+            <a href="#" class="hover:text-ticketbox transition">Sân khấu & Nghệ thuật</a>
+            <a href="#" class="hover:text-ticketbox transition">Thể Thao</a>
+            <a href="#" class="hover:text-ticketbox transition">Hội thảo & Workshop</a>
+            <a href="#" class="hover:text-ticketbox transition">Tham quan & Trải nghiệm</a>
+            <a href="#" class="hover:text-ticketbox transition">Khác</a>
+            <a href="#" class="hover:text-ticketbox transition">Vé bán lại</a>
+            <a href="#" class="hover:text-ticketbox transition">Blog</a>
+        </div>
+    </div>
+
+    <div class="min-h-screen">
+        <div class="container mx-auto px-4 py-8">
+
+            <div v-if="page==='login'" class="max-w-md mx-auto mt-10">
+                <div class="bg-[#1a1a1a] rounded-2xl p-8 shadow-2xl border border-gray-800">
+                    <h2 class="text-3xl font-black text-center mb-6 text-white">Đăng nhập</h2>
+                    <div class="space-y-4">
+                        <input v-model="loginForm.email" type="email" placeholder="Email" class="w-full px-4 py-3 rounded-xl bg-[#2a2a2a] text-white border border-gray-700 focus:border-ticketbox outline-none" />
+                        <input v-model="loginForm.password" type="password" placeholder="Mật khẩu" class="w-full px-4 py-3 rounded-xl bg-[#2a2a2a] text-white border border-gray-700 focus:border-ticketbox outline-none" />
+                        <button @click="processLogin" class="w-full py-3 rounded-xl bg-ticketbox text-white font-black hover:bg-green-600 transition">Đăng nhập</button>
+                        <div class="text-center mt-4">
+                            <button @click="page='register'" class="text-ticketbox font-medium hover:underline">Chưa có tài khoản? Đăng ký ngay</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-else-if="page==='register'" class="max-w-md mx-auto mt-10">
+                <div class="bg-[#1a1a1a] rounded-2xl p-8 shadow-2xl border border-gray-800">
+                    <h2 class="text-3xl font-black text-center mb-6 text-white">Đăng ký</h2>
+                    <div class="space-y-4">
+                        <input v-model="registerForm.name" placeholder="Họ tên" class="w-full px-4 py-3 rounded-xl bg-[#2a2a2a] text-white border border-gray-700 focus:border-ticketbox outline-none" />
+                        <input v-model="registerForm.email" placeholder="Email" class="w-full px-4 py-3 rounded-xl bg-[#2a2a2a] text-white border border-gray-700 focus:border-ticketbox outline-none" />
+                        <input v-model="registerForm.password" type="password" placeholder="Mật khẩu" class="w-full px-4 py-3 rounded-xl bg-[#2a2a2a] text-white border border-gray-700 focus:border-ticketbox outline-none" />
+                        <button @click="registerAccount" class="w-full py-3 rounded-xl bg-ticketbox text-white font-black hover:bg-green-600 transition">Đăng ký</button>
+                        <div class="text-center mt-4">
+                            <button @click="page='login'" class="text-gray-400 font-medium hover:text-white transition">Quay lại đăng nhập</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-else>
+                
+                <div class="grid md:grid-cols-2 gap-6 mb-12">
+                    <div class="relative rounded-2xl overflow-hidden group cursor-pointer border border-gray-800">
+                        <img src="https://images.unsplash.com/photo-1540039155732-6761b54cb116?w=800&q=80" class="w-full h-[300px] object-cover group-hover:scale-105 transition duration-500" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-6">
+                            <h3 class="text-2xl font-black">Swan Pass - Kịch Một Vạn</h3>
+                            <button class="mt-3 bg-white text-black px-6 py-2 rounded-lg font-bold w-fit">Xem chi tiết</button>
+                        </div>
+                    </div>
+                    <div class="relative rounded-2xl overflow-hidden group cursor-pointer border border-gray-800">
+                        <img src="https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800&q=80" class="w-full h-[300px] object-cover group-hover:scale-105 transition duration-500" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-6">
+                            <h3 class="text-2xl font-black">K-PULSE HANOI 2026</h3>
+                            <button class="mt-3 bg-white text-black px-6 py-2 rounded-lg font-bold w-fit">Xem chi tiết</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-12">
+                    <h2 class="text-xl font-bold mb-6 flex items-center gap-2"><i class="fas fa-star text-yellow-400"></i> Featured Stars</h2>
+                    <div class="flex gap-6 overflow-x-auto pb-4">
+                        <div class="min-w-[120px] w-[120px] h-[120px] rounded-full p-1 border-2 border-ticketbox bg-black relative">
+                            <img src="https://images.unsplash.com/photo-1516280440502-61a7a030cb37?w=200&q=80" class="w-full h-full rounded-full object-cover" />
+                        </div>
+                        <div class="min-w-[120px] w-[120px] h-[120px] rounded-full p-1 border-2 border-ticketbox bg-black relative">
+                            <img src="https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?w=200&q=80" class="w-full h-full rounded-full object-cover" />
+                        </div>
+                        <div class="min-w-[120px] w-[120px] h-[120px] rounded-full p-1 border-2 border-gray-700 bg-black relative opacity-70">
+                            <div class="w-full h-full rounded-full bg-gray-800 flex items-center justify-center text-xs text-center p-2">SS LABEL</div>
+                        </div>
+                        <div class="min-w-[120px] w-[120px] h-[120px] rounded-full p-1 border-2 border-ticketbox bg-black relative">
+                            <img src="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=200&q=80" class="w-full h-full rounded-full object-cover" />
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="text-2xl font-bold mb-6 border-b border-gray-800 pb-2">Sự kiện nổi bật sắp tới</h2>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div v-for="event in events" :key="event.id" class="bg-[#1a1a1a] rounded-2xl overflow-hidden shadow-xl border border-gray-800 flex flex-col">
+                        <div class="relative">
+                            <img :src="event.image" class="w-full h-56 object-cover" />
+                            <div class="absolute top-3 right-3 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                                {{ event.countdown || 'Đang mở bán' }}
+                            </div>
+                        </div>
+                        
+                        <div class="p-6 flex flex-col flex-1">
+                            <h3 class="text-2xl font-black mb-2 text-white">{{ event.name }}</h3>
+                            <p class="text-gray-400 mb-6 flex-1">{{ event.description }}</p>
+
+                            <div class="mb-4">
+                                <p class="text-sm font-semibold text-gray-300 mb-2">Chọn ghế ngồi:</p>
+                                <div class="grid grid-cols-5 gap-2">
+                                    <button v-for="seat in seats" @click="selectSeat(event.id,seat)"
+                                        :class="selectedSeats[event.id]===seat ? 'bg-ticketbox text-white' : 'bg-[#2a2a2a] text-gray-400 border border-gray-700 hover:bg-gray-700'"
+                                        class="h-10 rounded-lg font-bold text-sm transition">
+                                        {{ seat }}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="mb-6">
+                                <p class="text-sm font-semibold text-gray-300 mb-2">Loại vé:</p>
+                                <select v-model="selectedTicket[event.id]" class="w-full px-4 py-3 rounded-xl bg-[#2a2a2a] text-white border border-gray-700 outline-none focus:border-ticketbox">
+                                    <option disabled value="">-- Chọn loại vé --</option>
+                                    <option v-for="ticket in event.ticketTypes" :value="ticket">
+                                        {{ ticket.name }} - {{ formatPrice(ticket.price) }}
+                                    </option>
+                                </select>
+                            </div>
+
+                            <button @click="buyTicket(event)" class="w-full py-4 rounded-xl bg-ticketbox text-white font-black hover:bg-green-600 transition shadow-[0_0_15px_rgba(0,177,79,0.4)]">
+                                THANH TOÁN NGAY
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="showPayment" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
+            <div class="bg-[#1a1a1a] border border-gray-800 rounded-3xl p-8 max-w-md w-full relative">
+                <button @click="showPayment=false" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+                
+                <h2 class="text-2xl font-black text-center mb-6 text-white">Phương thức thanh toán</h2>
+                
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <button @click="paymentMethod='MoMo'" :class="paymentMethod==='MoMo' ? 'bg-[#A50064] text-white border-[#A50064]' : 'bg-[#2a2a2a] text-gray-400 border-gray-700'" class="py-4 rounded-xl font-bold border transition flex flex-col items-center gap-2">
+                        <i class="fas fa-wallet text-2xl"></i> MoMo
+                    </button>
+                    <button @click="paymentMethod='VNPay'" :class="paymentMethod==='VNPay' ? 'bg-[#005BAA] text-white border-[#005BAA]' : 'bg-[#2a2a2a] text-gray-400 border-gray-700'" class="py-4 rounded-xl font-bold border transition flex flex-col items-center gap-2">
+                        <i class="fas fa-qrcode text-2xl"></i> VNPay
+                    </button>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl mb-6 flex justify-center items-center">
+                    <div id="paymentQR"></div>
+                </div>
+
+                <div class="text-center text-sm text-gray-400 mb-6">
+                    Quét mã QR bằng ứng dụng {{ paymentMethod }} để hoàn tất
+                </div>
+
+                <button @click="confirmPayment" class="w-full py-4 rounded-xl bg-ticketbox text-white font-black hover:bg-green-600 transition">
+                    Xác nhận đã thanh toán
+                </button>
+            </div>
+        </div>
+
+        <div v-if="paymentLoading" class="fixed inset-0 bg-black/95 flex flex-col items-center justify-center z-[60]">
+            <div class="w-16 h-16 border-4 border-ticketbox border-t-transparent rounded-full animate-spin mb-6"></div>
+            <h2 class="text-2xl font-bold text-ticketbox">Đang xử lý giao dịch...</h2>
+            <p class="text-gray-400 mt-2">Vui lòng không đóng trình duyệt</p>
+        </div>
+
+    </div>
 </div>
 
 <script>
-
 const { createApp } = Vue;
 
 createApp({
-
-data(){
-
-return{
-
-page:'login',
-
-darkMode:false,
-
-showPayment:false,
-
-paymentLoading:false,
-
-paymentMethod:'MoMo',
-
-selectedEvent:null,
-
-selectedTicket:{},
-
-selectedSeats:{},
-
-currentUser:null,
-
-loginForm:{
-email:'',
-password:''
-},
-
-registerForm:{
-name:'',
-email:'',
-password:''
-},
-
-seats:[
-'A1','A2','A3','A4','A5',
-'B1','B2','B3','B4','B5'
-],
-
-users: JSON.parse(
-localStorage.getItem('arrow_users')
-) || [
-
-{
-name:'Admin',
-email:'admin@gmail.com',
-password:'123456',
-role:'admin'
-},
-
-{
-name:'User',
-email:'user@gmail.com',
-password:'123456',
-role:'user'
-}
-
-],
-
-events:[
-
-{
-id:'EVT001',
-name:'Lễ hội EDM',
-description:'Đại nhạc hội EDM lớn nhất năm',
-image:'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800&q=80',
-
-ticketTypes:[
-{
-name:'GA',
-price:500000
-},
-{
-name:'VIP',
-price:1500000
-}
-],
-
-startTime:'2026-12-31T20:00:00',
-
-countdown:''
-
-}
-
-]
-
-}
-
-},
-
-methods:{
-
-formatPrice(val){
-
-return new Intl.NumberFormat(
-'vi-VN',
-{
-style:'currency',
-currency:'VND'
-}
-).format(val);
-
-},
-
-processLogin(){
-
-const found=this.users.find(
-
-u=>
-
-u.email===this.loginForm.email &&
-
-u.password===this.loginForm.password
-
-);
-
-if(!found){
-
-alert('Sai tài khoản');
-
-return;
-
-}
-
-localStorage.setItem(
-'arrow_current_user',
-JSON.stringify(found)
-);
-
-if(found.role==='admin'){
-
-window.location.href='admin.html';
-
-return;
-
-}
-
-this.currentUser=found;
-
-this.page='home';
-
-},
-
-registerAccount(){
-
-const existed=this.users.find(
-u=>u.email===this.registerForm.email
-);
-
-if(existed){
-
-alert('Email tồn tại');
-
-return;
-
-}
-
-const newUser={
-
-name:this.registerForm.name,
-
-email:this.registerForm.email,
-
-password:this.registerForm.password,
-
-role:'user'
-
-};
-
-this.users.push(newUser);
-
-localStorage.setItem(
-'arrow_users',
-JSON.stringify(this.users)
-);
-
-alert('Đăng ký thành công');
-
-this.page='login';
-
-},
-
-buyTicket(event){
-
-if(!this.selectedTicket[event.id]){
-
-alert('Chọn loại vé');
-
-return;
-
-}
-
-if(!this.selectedSeats[event.id]){
-
-alert('Chọn ghế');
-
-return;
-
-}
-
-this.selectedEvent=event;
-
-this.showPayment=true;
-
-this.$nextTick(()=>{
-
-document.getElementById(
-'paymentQR'
-).innerHTML='';
-
-new QRCode(
-document.getElementById('paymentQR'),
-{
-text:'Thanh toán '+event.name,
-width:220,
-height:220
-}
-);
-
-});
-
-},
-
-selectSeat(eventId,seat){
-
-this.selectedSeats[eventId]=seat;
-
-},
-
-confirmPayment(){
-
-this.paymentLoading=true;
-
-setTimeout(()=>{
-
-const tickets=JSON.parse(
-localStorage.getItem('arrow_tickets')
-) || [];
-
-const ticket={
-
-code:'TKT'+Math.floor(Math.random()*999999),
-
-customerName:this.currentUser.name,
-
-customerEmail:this.currentUser.email,
-
-eventName:this.selectedEvent.name,
-
-ticketTypeName:this.selectedTicket[this.selectedEvent.id].name,
-
-pricePaid:this.selectedTicket[this.selectedEvent.id].price,
-
-seat:this.selectedSeats[this.selectedEvent.id],
-
-paymentMethod:this.paymentMethod,
-
-status:'Chưa check-in',
-
-used:false,
-
-createdAt:new Date().toLocaleString('vi-VN')
-
-};
-
-tickets.push(ticket);
-
-localStorage.setItem(
-'arrow_tickets',
-JSON.stringify(tickets)
-);
-
-this.paymentLoading=false;
-
-this.showPayment=false;
-
-alert('Thanh toán thành công');
-
-this.downloadTicket(ticket);
-
-},3000);
-
-},
-
-downloadTicket(ticket){
-
-const { jsPDF } = window.jspdf;
-
-const doc=new jsPDF();
-
-doc.setFontSize(22);
-
-doc.text('ARROW TICKET',20,20);
-
-doc.text(`Mã vé: ${ticket.code}`,20,40);
-
-doc.text(`Khách hàng: ${ticket.customerName}`,20,55);
-
-doc.text(`Sự kiện: ${ticket.eventName}`,20,70);
-
-doc.text(`Ghế: ${ticket.seat}`,20,85);
-
-doc.text(`Thanh toán: ${ticket.paymentMethod}`,20,100);
-
-doc.save(ticket.code+'.pdf');
-
-},
-
-updateCountdown(){
-
-this.events.forEach(event=>{
-
-const now=new Date().getTime();
-
-const distance=
-new Date(event.startTime).getTime()-now;
-
-if(distance<=0){
-
-event.countdown='Đang diễn ra';
-
-return;
-
-}
-
-const days=Math.floor(
-distance/(1000*60*60*24)
-);
-
-const hours=Math.floor(
-(distance%(1000*60*60*24))
-/
-(1000*60*60)
-);
-
-const minutes=Math.floor(
-(distance%(1000*60*60))
-/
-(1000*60)
-);
-
-event.countdown=
-`${days} ngày ${hours} giờ ${minutes} phút`;
-
-});
-
-},
-
-logout(){
-
-localStorage.removeItem(
-'arrow_current_user'
-);
-
-location.reload();
-
-}
-
-},
-
-mounted(){
-
-const savedUser=localStorage.getItem(
-'arrow_current_user'
-);
-
-if(savedUser){
-
-const user=JSON.parse(savedUser);
-
-if(user.role==='admin'){
-
-window.location.href='admin.html';
-
-}else{
-
-this.currentUser=user;
-
-this.page='home';
-
-}
-
-}
-
-setInterval(()=>{
-
-this.updateCountdown();
-
-},1000);
-
-}
-
+    data(){
+        return{
+            page:'login',
+            showPayment:false,
+            paymentLoading:false,
+            paymentMethod:'MoMo',
+            selectedEvent:null,
+            selectedTicket:{},
+            selectedSeats:{},
+            currentUser:null,
+            loginForm:{ email:'', password:'' },
+            registerForm:{ name:'', email:'', password:'' },
+            seats:['A1','A2','A3','A4','A5','B1','B2','B3','B4','B5'],
+            users: JSON.parse(localStorage.getItem('arrow_users')) || [
+                { name:'Admin', email:'admin@gmail.com', password:'123', role:'admin' },
+                { name:'User', email:'user@gmail.com', password:'123', role:'user' }
+            ],
+            events:[
+                {
+                    id:'EVT001',
+                    name:'Đại Nhạc Hội EDM Cuối Năm',
+                    description:'Sự kiện âm nhạc điện tử bùng nổ với dàn DJ hàng đầu. Không gian sôi động, ánh sáng hoành tráng.',
+                    image:'https://images.unsplash.com/photo-1470229722913-7c090be5c560?w=800&q=80',
+                    ticketTypes:[
+                        { name:'GA (Đứng)', price:500000 },
+                        { name:'VIP (Ngồi, Đồ uống)', price:1500000 }
+                    ],
+                    startTime:'2026-12-31T20:00:00',
+                    countdown:''
+                }
+            ]
+        }
+    },
+    methods:{
+        formatPrice(val){
+            return new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(val);
+        },
+        processLogin(){
+            const found=this.users.find(u => u.email===this.loginForm.email && u.password===this.loginForm.password);
+            if(!found){ alert('Sai tài khoản hoặc mật khẩu'); return; }
+            localStorage.setItem('arrow_current_user', JSON.stringify(found));
+            if(found.role==='admin'){
+                window.location.href='admin.html';
+                return;
+            }
+            this.currentUser=found;
+            this.page='home';
+        },
+        registerAccount(){
+            if(this.users.find(u=>u.email===this.registerForm.email)){
+                alert('Email đã tồn tại'); return;
+            }
+            const newUser={ name:this.registerForm.name, email:this.registerForm.email, password:this.registerForm.password, role:'user' };
+            this.users.push(newUser);
+            localStorage.setItem('arrow_users', JSON.stringify(this.users));
+            alert('Đăng ký thành công');
+            this.page='login';
+        },
+        buyTicket(event){
+            if(!this.selectedTicket[event.id]){ alert('Vui lòng chọn loại vé'); return; }
+            if(!this.selectedSeats[event.id]){ alert('Vui lòng chọn ghế ngồi'); return; }
+            this.selectedEvent=event;
+            this.showPayment=true;
+            this.$nextTick(()=>{
+                document.getElementById('paymentQR').innerHTML='';
+                new QRCode(document.getElementById('paymentQR'), {
+                    text:'THANHTOAN_' + event.id + '_' + Date.now(),
+                    width:200, height:200
+                });
+            });
+        },
+        selectSeat(eventId,seat){
+            this.selectedSeats[eventId]=seat;
+        },
+        confirmPayment(){
+            this.paymentLoading=true;
+            setTimeout(()=>{
+                const tickets=JSON.parse(localStorage.getItem('arrow_tickets')) || [];
+                const ticket={
+                    code:'TKT'+Math.floor(Math.random()*999999),
+                    customerName:this.currentUser.name,
+                    customerEmail:this.currentUser.email,
+                    eventName:this.selectedEvent.name,
+                    ticketTypeName:this.selectedTicket[this.selectedEvent.id].name,
+                    pricePaid:this.selectedTicket[this.selectedEvent.id].price,
+                    seat:this.selectedSeats[this.selectedEvent.id],
+                    paymentMethod:this.paymentMethod,
+                    status:'Chưa check-in',
+                    used:false,
+                    createdAt:new Date().toLocaleString('vi-VN')
+                };
+                tickets.push(ticket);
+                localStorage.setItem('arrow_tickets', JSON.stringify(tickets));
+                this.paymentLoading=false;
+                this.showPayment=false;
+                alert('Thanh toán thành công! Vé sẽ được tải xuống.');
+                this.downloadTicket(ticket);
+            }, 2500);
+        },
+        downloadTicket(ticket){
+            const { jsPDF } = window.jspdf;
+            const doc=new jsPDF();
+            doc.setFontSize(20);
+            doc.setTextColor(0, 177, 79); // Ticketbox Green
+            doc.text('ARROW TICKET (E-TICKET)', 20, 20);
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Ma ve: ${ticket.code}`, 20, 40);
+            doc.text(`Khach hang: ${ticket.customerName}`, 20, 50);
+            doc.text(`Su kien: ${ticket.eventName}`, 20, 60);
+            doc.text(`Loai ve: ${ticket.ticketTypeName} - Ghe: ${ticket.seat}`, 20, 70);
+            doc.text(`Phuong thuc thanh toan: ${ticket.paymentMethod}`, 20, 80);
+            doc.text(`Gia ve: ${ticket.pricePaid} VND`, 20, 90);
+            doc.save(ticket.code+'.pdf');
+        },
+        updateCountdown(){
+            this.events.forEach(event=>{
+                const now=new Date().getTime();
+                const distance=new Date(event.startTime).getTime()-now;
+                if(distance<=0){ event.countdown='Đang diễn ra'; return; }
+                const days=Math.floor(distance/(1000*60*60*24));
+                const hours=Math.floor((distance%(1000*60*60*24))/(1000*60*60));
+                const minutes=Math.floor((distance%(1000*60*60))/(1000*60));
+                event.countdown=`Còn ${days}n ${hours}g ${minutes}p`;
+            });
+        },
+        logout(){
+            localStorage.removeItem('arrow_current_user');
+            location.reload();
+        }
+    },
+    mounted(){
+        const savedUser=localStorage.getItem('arrow_current_user');
+        if(savedUser){
+            const user=JSON.parse(savedUser);
+            if(user.role==='admin'){
+                window.location.href='admin.html';
+            }else{
+                this.currentUser=user;
+                this.page='home';
+            }
+        }
+        setInterval(()=>this.updateCountdown(), 1000);
+    }
 }).mount('#app');
-
 </script>
-
 </body>
 </html>
