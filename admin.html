@@ -175,57 +175,40 @@ createApp({
         toggleDarkMode(){
             this.darkMode=!this.darkMode;
             localStorage.setItem('admin_dark_mode', this.darkMode);
-            this.renderChart(); // Re-render chart to adjust colors
+            this.renderChart(); 
         },
         formatPrice(val){
             return new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(val);
         },
-        loadData(){
-            this.users=JSON.parse(localStorage.getItem('arrow_users')) || [];
-            this.tickets=JSON.parse(localStorage.getItem('arrow_tickets')) || [];
+        async loadData(){
+            try {
+                // Đọc dữ liệu thật từ Database
+                const resUsers = await fetch('api_get_users.php');
+                this.users = await resUsers.json();
+
+                const resTickets = await fetch('api_get_tickets.php');
+                this.tickets = await resTickets.json();
+
+                this.$nextTick(()=>{ this.renderChart(); });
+            } catch (error) {
+                console.error("Lỗi:", error);
+            }
         },
         totalRevenue(){
-            return this.tickets.reduce((sum,t)=>sum+t.pricePaid, 0);
+            return this.tickets.reduce((sum,t)=>sum+(t.price_paid || 0), 0);
         },
         checkIn(code){
-            // Tìm mã vé (nếu mã do QR trả về có chứa 'THANHTOAN_' thì cắt đi)
-            let actualCode = code;
-            if(code.includes('THANHTOAN_')){
-                alert("Mã này là mã thanh toán, không phải mã vé. Vui lòng quét mã trên file PDF vé.");
-                return;
-            }
-
-            let tickets=JSON.parse(localStorage.getItem('arrow_tickets')) || [];
-            let found = false;
-            tickets=tickets.map(ticket=>{
-                if(ticket.code===actualCode && !ticket.used){
-                    ticket.used=true;
-                    ticket.status='Đã check-in';
-                    found = true;
-                }
-                return ticket;
-            });
-            
-            if(found){
-                localStorage.setItem('arrow_tickets', JSON.stringify(tickets));
-                this.loadData();
-                alert(`Check-in thành công cho vé: ${actualCode}`);
-            } else {
-                alert(`Không tìm thấy vé ${actualCode} hoặc vé đã được sử dụng!`);
-            }
+            alert("Đã nhận mã: " + code + ". Chức năng checkin đang được cập nhật qua API.");
+            // Bạn có thể thêm api_checkin.php sau nếu muốn
         },
         renderChart(){
             const ctx=document.getElementById('revenueChart');
-            // Xóa chart cũ nếu có
-            if(window.myRevenueChart) {
-                window.myRevenueChart.destroy();
-            }
+            if(window.myRevenueChart) window.myRevenueChart.destroy();
             
-            // Nhóm doanh thu theo sự kiện
             const revenueByEvent = {};
             this.tickets.forEach(t => {
-                if(!revenueByEvent[t.eventName]) revenueByEvent[t.eventName] = 0;
-                revenueByEvent[t.eventName] += t.pricePaid;
+                if(!revenueByEvent[t.event_name]) revenueByEvent[t.event_name] = 0;
+                revenueByEvent[t.event_name] += t.price_paid;
             });
 
             const textColor = this.darkMode ? '#cbd5e1' : '#475569';
@@ -238,56 +221,20 @@ createApp({
                     datasets:[{
                         label:'Doanh thu (VND)',
                         data: Object.keys(revenueByEvent).length ? Object.values(revenueByEvent) : [0],
-                        backgroundColor: '#6366f1', // Indigo-500
+                        backgroundColor: '#6366f1',
                         borderRadius: 8,
                         barThickness: 40
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { color: textColor },
-                            grid: { color: gridColor, drawBorder: false }
-                        },
-                        x: {
-                            ticks: { color: textColor },
-                            grid: { display: false, drawBorder: false }
-                        }
+                        y: { ticks: { color: textColor }, grid: { color: gridColor } },
+                        x: { ticks: { color: textColor }, grid: { display: false } }
                     }
                 }
             });
-        },
-        startScanner(){
-            this.isScanning = true;
-            this.$nextTick(() => {
-                this.html5QrcodeScanner = new Html5Qrcode("reader");
-                this.html5QrcodeScanner.start(
-                    { facingMode:"environment" },
-                    { fps:10, qrbox: { width: 200, height: 200 } },
-                    (decodedText)=>{
-                        this.checkIn(decodedText);
-                        this.stopScanner();
-                    },
-                    (error) => { /* Xử lý lỗi im lặng */ }
-                ).catch(err => {
-                    alert("Không thể mở Camera: " + err);
-                    this.isScanning = false;
-                });
-            });
-        },
-        stopScanner() {
-            if(this.html5QrcodeScanner){
-                this.html5QrcodeScanner.stop().then(() => {
-                    this.html5QrcodeScanner.clear();
-                    this.isScanning = false;
-                });
-            }
         },
         logout(){
             localStorage.removeItem('arrow_current_user');
@@ -301,13 +248,9 @@ createApp({
             return;
         }
         const savedDark=localStorage.getItem('admin_dark_mode');
-        if(savedDark){
-            this.darkMode=savedDark==='true';
-        }
+        if(savedDark) this.darkMode=savedDark==='true';
+        
         this.loadData();
-        this.$nextTick(()=>{
-            this.renderChart();
-        });
     }
 }).mount('#app');
 </script>

@@ -10,7 +10,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-        /* Tùy chỉnh màu chủ đạo giống ảnh */
         .bg-ticketbox { background-color: #00b14f; }
         .text-ticketbox { color: #00b14f; }
         .border-ticketbox { border-color: #00b14f; }
@@ -37,7 +36,7 @@
                 <button class="hidden md:block border border-white rounded-full px-4 py-2 hover:bg-white hover:text-[#00b14f] transition">
                     Tạo sự kiện
                 </button>
-                <button class="hidden md:flex items-center gap-2">
+                <button class="hidden md:flex items-center gap-2" @click="page='home'">
                     <i class="fas fa-ticket-alt"></i> Vé của tôi
                 </button>
                 
@@ -104,7 +103,6 @@
             </div>
 
             <div v-else>
-                
                 <div class="grid md:grid-cols-2 gap-6 mb-12">
                     <div class="relative rounded-2xl overflow-hidden group cursor-pointer border border-gray-800">
                         <img src="https://images.unsplash.com/photo-1540039155732-6761b54cb116?w=800&q=80" class="w-full h-[300px] object-cover group-hover:scale-105 transition duration-500" />
@@ -230,33 +228,29 @@ const { createApp } = Vue;
 createApp({
     data(){
         return{
-            page:'login',
-            showPayment:false,
-            paymentLoading:false,
-            paymentMethod:'MoMo',
-            selectedEvent:null,
-            selectedTicket:{},
-            selectedSeats:{},
-            currentUser:null,
-            loginForm:{ email:'', password:'' },
-            registerForm:{ name:'', email:'', password:'' },
-            seats:['A1','A2','A3','A4','A5','B1','B2','B3','B4','B5'],
-            users: JSON.parse(localStorage.getItem('arrow_users')) || [
-                { name:'Admin', email:'admin@gmail.com', password:'123', role:'admin' },
-                { name:'User', email:'user@gmail.com', password:'123', role:'user' }
-            ],
-            events:[
+            page: 'login',
+            showPayment: false,
+            paymentLoading: false,
+            paymentMethod: 'MoMo',
+            selectedEvent: null,
+            selectedTicket: {},
+            selectedSeats: {},
+            currentUser: null,
+            loginForm: { email: '', password: '' },
+            registerForm: { name: '', email: '', password: '' },
+            seats: ['A1','A2','A3','A4','A5','B1','B2','B3','B4','B5'],
+            events: [
                 {
-                    id:'EVT001',
-                    name:'Đại Nhạc Hội EDM Cuối Năm',
-                    description:'Sự kiện âm nhạc điện tử bùng nổ với dàn DJ hàng đầu. Không gian sôi động, ánh sáng hoành tráng.',
-                    image:'https://images.unsplash.com/photo-1470229722913-7c090be5c560?w=800&q=80',
-                    ticketTypes:[
-                        { name:'GA (Đứng)', price:500000 },
-                        { name:'VIP (Ngồi, Đồ uống)', price:1500000 }
+                    id: 'EVT001',
+                    name: 'Đại Nhạc Hội EDM Cuối Năm',
+                    description: 'Sự kiện âm nhạc điện tử bùng nổ với dàn DJ hàng đầu. Không gian sôi động, ánh sáng hoành tráng.',
+                    image: 'https://images.unsplash.com/photo-1470229722913-7c090be5c560?w=800&q=80',
+                    ticketTypes: [
+                        { name: 'GA (Đứng)', price: 500000 },
+                        { name: 'VIP (Ngồi, Đồ uống)', price: 1500000 }
                     ],
-                    startTime:'2026-12-31T20:00:00',
-                    countdown:''
+                    startTime: '2026-12-31T20:00:00',
+                    countdown: ''
                 }
             ]
         }
@@ -265,73 +259,155 @@ createApp({
         formatPrice(val){
             return new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(val);
         },
-        processLogin(){
-            const found=this.users.find(u => u.email===this.loginForm.email && u.password===this.loginForm.password);
-            if(!found){ alert('Sai tài khoản hoặc mật khẩu'); return; }
-            localStorage.setItem('arrow_current_user', JSON.stringify(found));
-            if(found.role==='admin'){
-                window.location.href='admin.html';
-                return;
+        async processLogin(){
+            try {
+                const response = await fetch('api_login.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: this.loginForm.email,
+                        password: this.loginForm.password
+                    })
+                });
+                
+                const text = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(text);
+                } catch(e) {
+                    // Nếu lỗi CSDL, PHP xuất văn bản thô. Đoạn này sẽ hứng tóm gọn và in ra màn hình
+                    console.error("Phản hồi từ server không phải JSON hợp lệ:", text);
+                    alert("Lỗi CSDL hoặc PHP lỗi cấu trúc:\n" + text);
+                    return;
+                }
+                
+                if (result.status === 'success') {
+                    localStorage.setItem('arrow_current_user', JSON.stringify(result.user));
+                    if (result.user.role === 'admin') {
+                        window.location.href = 'admin.html';
+                    } else {
+                        this.currentUser = result.user;
+                        this.page = 'home';
+                    }
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                console.error("Lỗi đăng nhập:", error);
+                alert("Mất kết nối tới hệ thống server ảo.");
             }
-            this.currentUser=found;
-            this.page='home';
         },
-        registerAccount(){
-            if(this.users.find(u=>u.email===this.registerForm.email)){
-                alert('Email đã tồn tại'); return;
+        async registerAccount(){
+            try {
+                const response = await fetch('api_register.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: this.registerForm.name,
+                        email: this.registerForm.email,
+                        password: this.registerForm.password
+                    })
+                });
+                
+                const text = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(text);
+                } catch(e) {
+                    console.error("Phản hồi từ server không phải JSON hợp lệ:", text);
+                    alert("Lỗi CSDL hoặc PHP lỗi cấu trúc:\n" + text);
+                    return;
+                }
+                
+                if (result.status === 'success') {
+                    alert('Đăng ký tài khoản thành công!');
+                    this.page = 'login';
+                    this.registerForm = { name: '', email: '', password: '' };
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                console.error("Lỗi đăng ký:", error);
+                alert("Mất kết nối tới hệ thống server ảo.");
             }
-            const newUser={ name:this.registerForm.name, email:this.registerForm.email, password:this.registerForm.password, role:'user' };
-            this.users.push(newUser);
-            localStorage.setItem('arrow_users', JSON.stringify(this.users));
-            alert('Đăng ký thành công');
-            this.page='login';
         },
         buyTicket(event){
-            if(!this.selectedTicket[event.id]){ alert('Vui lòng chọn loại vé'); return; }
-            if(!this.selectedSeats[event.id]){ alert('Vui lòng chọn ghế ngồi'); return; }
-            this.selectedEvent=event;
-            this.showPayment=true;
-            this.$nextTick(()=>{
-                document.getElementById('paymentQR').innerHTML='';
+            if(!this.currentUser){
+                alert('Vui lòng đăng nhập trước khi thực hiện mua vé!');
+                this.page = 'login';
+                return;
+            }
+            if(!this.selectedTicket[event.id]){ alert('Vui lòng chọn loại vé cần mua'); return; }
+            if(!this.selectedSeats[event.id]){ alert('Vui lòng chọn vị trí ghế ngồi'); return; }
+            
+            this.selectedEvent = event;
+            this.showPayment = true;
+            this.$nextTick(() => {
+                document.getElementById('paymentQR').innerHTML = '';
                 new QRCode(document.getElementById('paymentQR'), {
-                    text:'THANHTOAN_' + event.id + '_' + Date.now(),
-                    width:200, height:200
+                    text: 'THANHTOAN_' + event.id + '_' + Date.now(),
+                    width: 200, height: 200
                 });
             });
         },
-        selectSeat(eventId,seat){
-            this.selectedSeats[eventId]=seat;
+        selectSeat(eventId, seat){
+            this.selectedSeats[eventId] = seat;
         },
-        confirmPayment(){
-            this.paymentLoading=true;
-            setTimeout(()=>{
-                const tickets=JSON.parse(localStorage.getItem('arrow_tickets')) || [];
-                const ticket={
-                    code:'TKT'+Math.floor(Math.random()*999999),
-                    customerName:this.currentUser.name,
-                    customerEmail:this.currentUser.email,
-                    eventName:this.selectedEvent.name,
-                    ticketTypeName:this.selectedTicket[this.selectedEvent.id].name,
-                    pricePaid:this.selectedTicket[this.selectedEvent.id].price,
-                    seat:this.selectedSeats[this.selectedEvent.id],
-                    paymentMethod:this.paymentMethod,
-                    status:'Chưa check-in',
-                    used:false,
-                    createdAt:new Date().toLocaleString('vi-VN')
-                };
-                tickets.push(ticket);
-                localStorage.setItem('arrow_tickets', JSON.stringify(tickets));
-                this.paymentLoading=false;
-                this.showPayment=false;
-                alert('Thanh toán thành công! Vé sẽ được tải xuống.');
-                this.downloadTicket(ticket);
-            }, 2500);
+        async confirmPayment(){
+            this.paymentLoading = true;
+            
+            const ticket = {
+                code: 'TKT' + Math.floor(Math.random() * 999999),
+                customerName: this.currentUser.name,
+                customerEmail: this.currentUser.email,
+                eventName: this.selectedEvent.name,
+                ticketTypeName: this.selectedTicket[this.selectedEvent.id].name,
+                pricePaid: this.selectedTicket[this.selectedEvent.id].price,
+                seat: this.selectedSeats[this.selectedEvent.id],
+                paymentMethod: this.paymentMethod
+            };
+
+            try {
+                const response = await fetch('api_buy_ticket.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(ticket)
+                });
+                
+                const text = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(text);
+                } catch(e) {
+                    this.paymentLoading = false;
+                    console.error("Phản hồi từ server không phải JSON hợp lệ:", text);
+                    alert("Lỗi CSDL hoặc PHP lỗi cấu trúc:\n" + text);
+                    return;
+                }
+
+                setTimeout(() => {
+                    this.paymentLoading = false;
+                    this.showPayment = false;
+                    
+                    if (result.status === 'success') {
+                        alert('Thanh toán hoàn tất thành công! Vé hệ thống sẽ tự động tải xuống.');
+                        this.downloadTicket(ticket);
+                    } else {
+                        alert('Có lỗi xảy ra từ máy chủ hệ thống: ' + result.message);
+                    }
+                }, 2000);
+
+            } catch (error) {
+                console.error("Lỗi xử lý thanh toán dữ liệu:", error);
+                this.paymentLoading = false;
+                alert("Mất kết nối tới hệ thống server ảo.");
+            }
         },
         downloadTicket(ticket){
             const { jsPDF } = window.jspdf;
-            const doc=new jsPDF();
+            const doc = new jsPDF();
             doc.setFontSize(20);
-            doc.setTextColor(0, 177, 79); // Ticketbox Green
+            doc.setTextColor(0, 177, 79); 
             doc.text('ARROW TICKET (E-TICKET)', 20, 20);
             doc.setFontSize(12);
             doc.setTextColor(0, 0, 0);
@@ -341,17 +417,17 @@ createApp({
             doc.text(`Loai ve: ${ticket.ticketTypeName} - Ghe: ${ticket.seat}`, 20, 70);
             doc.text(`Phuong thuc thanh toan: ${ticket.paymentMethod}`, 20, 80);
             doc.text(`Gia ve: ${ticket.pricePaid} VND`, 20, 90);
-            doc.save(ticket.code+'.pdf');
+            doc.save(ticket.code + '.pdf');
         },
         updateCountdown(){
-            this.events.forEach(event=>{
-                const now=new Date().getTime();
-                const distance=new Date(event.startTime).getTime()-now;
-                if(distance<=0){ event.countdown='Đang diễn ra'; return; }
-                const days=Math.floor(distance/(1000*60*60*24));
-                const hours=Math.floor((distance%(1000*60*60*24))/(1000*60*60));
-                const minutes=Math.floor((distance%(1000*60*60))/(1000*60));
-                event.countdown=`Còn ${days}n ${hours}g ${minutes}p`;
+            this.events.forEach(event => {
+                const now = new Date().getTime();
+                const distance = new Date(event.startTime).getTime() - now;
+                if(distance <= 0){ event.countdown = 'Đang diễn ra'; return; }
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                event.countdown = `Còn ${days}n ${hours}g ${minutes}p`;
             });
         },
         logout(){
@@ -360,17 +436,22 @@ createApp({
         }
     },
     mounted(){
-        const savedUser=localStorage.getItem('arrow_current_user');
+        // Cảnh báo trực quan ngay lập tức nếu mở sai giao thức tệp cục bộ
+        if (window.location.protocol === 'file:') {
+            alert("CẢNH BÁO MÔI TRƯỜNG:\nBạn đang mở file trực tiếp từ ổ đĩa cứng (file://).\nCác tính năng Đăng nhập/Đăng ký/Mua vé CSDL sẽ KHÔNG hoạt động.\n\nVui lòng truy cập chính xác thông qua liên kết: http://localhost/arrow/index.html");
+        }
+
+        const savedUser = localStorage.getItem('arrow_current_user');
         if(savedUser){
-            const user=JSON.parse(savedUser);
-            if(user.role==='admin'){
-                window.location.href='admin.html';
+            const user = JSON.parse(savedUser);
+            if(user.role === 'admin'){
+                window.location.href = 'admin.html';
             }else{
-                this.currentUser=user;
-                this.page='home';
+                this.currentUser = user;
+                this.page = 'home';
             }
         }
-        setInterval(()=>this.updateCountdown(), 1000);
+        setInterval(() => this.updateCountdown(), 1000);
     }
 }).mount('#app');
 </script>
