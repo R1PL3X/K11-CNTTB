@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticketbox - Đã sửa lỗi bộ lọc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #000000; color: #ffffff; font-family: -apple-system, sans-serif; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <header class="bg-[#00b14f] py-3 px-4 sticky top-0 z-50">
+        <div class="max-w-[1200px] mx-auto flex items-center justify-between">
+            <a href="#" onclick="resetFilters()" class="text-3xl font-bold text-white tracking-tighter">ticketbox</a>
+
+            <div class="flex-1 max-w-[600px] mx-8 flex bg-white rounded-md overflow-hidden h-10">
+                <div class="flex items-center px-3 text-gray-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <input type="text" id="search-input" oninput="applyFilters()" placeholder="Bạn tìm gì hôm nay? (Thử gõ 'quang ha' không dấu)" class="w-full text-sm text-gray-700 outline-none placeholder-gray-400">
+                <div class="w-[1px] bg-gray-300 my-2"></div>
+                <button onclick="applyFilters()" class="px-4 text-sm font-semibold text-gray-700 hover:bg-gray-50">Tìm kiếm</button>
+            </div>
+
+            <div class="flex items-center space-x-4 text-sm text-white font-medium">
+                <button class="border border-white px-3 py-1.5 rounded-[20px] hover:bg-white hover:text-[#00b14f] transition">Tạo sự kiện</button>
+                <a href="#" class="hover:text-gray-200">Đăng nhập | Đăng ký</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-[1200px] mx-auto px-4 py-6">
+        
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-gray-300 text-sm">Kết quả tìm kiếm: <span id="result-count" class="font-bold text-white">8</span></h2>
+            
+            <div class="flex space-x-3 text-sm font-medium">
+                <button onclick="alert('Chức năng chọn ngày cần tích hợp thêm thư viện Lịch (Calendar).')" class="flex items-center space-x-2 bg-[#333333] text-white px-4 py-2 rounded-full hover:bg-gray-700">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <span>Tất cả các ngày</span>
+                </button>
+
+                <button onclick="alert('Đây là nút để mở bảng chọn Địa điểm và Giá tiền.')" class="flex items-center space-x-2 bg-[#00b14f] text-white px-4 py-2 rounded-full hover:bg-[#009944]">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                    <span>Bộ lọc</span>
+                </button>
+
+                <button id="btn-live-music" onclick="toggleLiveMusic()" class="flex items-center space-x-2 border border-[#00b14f] text-[#00b14f] bg-[#00b14f]/10 px-4 py-2 rounded-full hover:bg-[#00b14f]/20 transition-colors">
+                    <svg class="w-4 h-4 icon-default" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9V5a2 2 0 012-2h2a2 2 0 012 2v4M4 7h16m-4 4h4m-4 4h4M4 11h4m-4 4h4m-4 4h16"></path></svg>
+                    <span>Nhạc sống</span>
+                    <svg id="icon-close-live" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <div id="events-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-8">
+            </div>
+
+    </main>
+
+    <script>
+        // Dữ liệu mẫu (Phân loại rõ live-music và các loại khác)
+        const eventsData = [
+            { id: 1, title: "HBAShow: Nồng Nàn Hà Nội - Bạch Công Khanh", price: 900000, date: "22 tháng 05, 2026", category: "live-music", img: "https://images.unsplash.com/photo-1540039155733-41f173738555?auto=format&fit=crop&w=600&q=80" },
+            { id: 2, title: "BÙI CÔNG NAM \"THE STORY\" LIVETOUR IN HANOI 2026", price: 800000, date: "24 tháng 05, 2026", category: "live-music", img: "https://images.unsplash.com/photo-1470229722913-7c092bba48ec?auto=format&fit=crop&w=600&q=80" },
+            { id: 3, title: "[BẾN THÀNH] Đêm nhạc Uyên Linh - Hà An Huy", price: 600000, date: "28 tháng 05, 2026", category: "live-music", img: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&w=600&q=80" },
+            { id: 4, title: "FORESTIVAL | CHIẾN BINH BÌNH MINH 2026", price: 900000, date: "30 tháng 05, 2026", category: "live-music", img: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=600&q=80" },
+            { id: 5, title: "The Dome Show #4: Mini Show Quang Hà - Ngỡ Như Trăm Năm", price: 1950000, date: "30 tháng 05, 2026", category: "live-music", img: "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=600&q=80" },
+            { id: 6, title: "\"The Tales\" Piano Recital - Khi âm nhạc kể chuyện", price: 150000, date: "30 tháng 05, 2026", category: "classic", img: "https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=600&q=80" },
+            { id: 7, title: "[The Grand Ho Tram] LIVE SHOW MINH TUYẾT", price: 1130000, date: "30 tháng 05, 2026", category: "live-music", img: "https://images.unsplash.com/photo-1540039155733-41f173738555?auto=format&fit=crop&w=600&q=80" },
+            { id: 8, title: "Đại tiệc nhạc nước mừng Quốc tế thiếu nhi", price: 50000, date: "30 tháng 05, 2026", category: "family", img: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80" }
+        ];
+
+        let isLiveMusicActive = false;
+
+        // CÔNG CỤ CHUẨN HÓA: Bỏ dấu tiếng Việt để tìm kiếm chính xác (VD: "ha noi" = "hà nội")
+        function removeVietnameseTones(str) {
+            str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+            str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+            str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+            str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+            str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+            str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+            str = str.replace(/đ/g, "d");
+            return str;
+        }
+
+        function renderEvents(eventsToRender) {
+            const grid = document.getElementById('events-grid');
+            document.getElementById('result-count').innerText = eventsToRender.length;
+
+            if (eventsToRender.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-gray-500 fade-in">
+                                    <p class="text-lg">Không tìm thấy sự kiện nào.</p>
+                                  </div>`;
+                return;
+            }
+
+            grid.innerHTML = eventsToRender.map(ev => `
+                <a href="event.html" class="group block cursor-pointer fade-in">
+                    <div class="rounded-xl overflow-hidden relative aspect-[4/2.5] bg-gray-800">
+                        <img src="${ev.img}" alt="${ev.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                    </div>
+                    <div class="mt-3">
+                        <h3 class="font-bold text-[15px] leading-tight line-clamp-2 hover:text-[#00b14f] transition">${ev.title}</h3>
+                        <p class="text-[#00b14f] font-bold text-sm mt-1.5">Từ ${new Intl.NumberFormat('vi-VN').format(ev.price)}đ</p>
+                        <p class="text-gray-400 text-xs mt-1.5 flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            ${ev.date}
+                        </p>
+                    </div>
+                </a>
+            `).join('');
+        }
+
+        // HÀM LỌC ĐÃ SỬA LỖI
+        function applyFilters() {
+            // Lấy từ khóa, chuyển thành chữ thường và gỡ bỏ dấu tiếng Việt
+            const rawKeyword = document.getElementById('search-input').value.toLowerCase().trim();
+            const keyword = removeVietnameseTones(rawKeyword);
+
+            const filteredEvents = eventsData.filter(ev => {
+                // Xử lý tiêu đề sự kiện (chuyển thường, bỏ dấu)
+                const titleNormalized = removeVietnameseTones(ev.title.toLowerCase());
+                const matchName = titleNormalized.includes(keyword);
+                
+                const matchCategory = isLiveMusicActive ? ev.category === 'live-music' : true;
+
+                return matchName && matchCategory;
+            });
+
+            renderEvents(filteredEvents);
+        }
+
+        // HÀM BẬT/TẮT NHẠC SỐNG ĐÃ SỬA UI
+        function toggleLiveMusic() {
+            isLiveMusicActive = !isLiveMusicActive;
+            const btn = document.getElementById('btn-live-music');
+            const closeIcon = document.getElementById('icon-close-live');
+            
+            if (isLiveMusicActive) {
+                // Khi bật: Đổi nền xanh, hiện icon X
+                btn.className = "flex items-center space-x-2 bg-[#00b14f] text-white px-4 py-2 rounded-full transition-colors";
+                closeIcon.classList.remove('hidden');
+            } else {
+                // Khi tắt: Trả về viền xanh ban đầu, ẩn icon X
+                btn.className = "flex items-center space-x-2 border border-[#00b14f] text-[#00b14f] bg-[#00b14f]/10 px-4 py-2 rounded-full hover:bg-[#00b14f]/20 transition-colors";
+                closeIcon.classList.add('hidden');
+            }
+            applyFilters();
+        }
+
+        function resetFilters() {
+            document.getElementById('search-input').value = "";
+            if (isLiveMusicActive) toggleLiveMusic(); // Tắt bộ lọc nếu đang bật
+            else applyFilters(); // Nếu đã tắt sẵn thì chỉ cần cập nhật lại list
+        }
+
+        window.onload = () => renderEvents(eventsData);
+    </script>
+</body>
+</html>
